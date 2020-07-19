@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 import tracking_url
 from collections import ChainMap
 from datetime import datetime
+import dateparser
 
 DEFAULT_TIME = datetime(1970,1,1,0,0,0)
 USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X x.y; rv:42.0) Gecko/20100101 Firefox/42.0'
@@ -31,6 +32,8 @@ def ups_info_helper(trackingNumber, raw=False):
                     )
 
   data = r.json()
+  if(raw):
+    print(json.dumps(data, indent=2))
   number = trackingNumber
   info   = data["trackDetails"][0]
   if info["packageStatus"]=='Delivered':
@@ -38,12 +41,10 @@ def ups_info_helper(trackingNumber, raw=False):
   else:
     delivery_time = info["scheduledDeliveryDate"]+" 9:00 PM"
   delivery_time = delivery_time.replace('.','')
-  delivery_time = datetime.strptime(delivery_time, '%m/%d/%Y %I:%M %p')
+  delivery_time = dateparser.parse(delivery_time)
 
   result = {'status': info["packageStatus"],
        'delivery_time': delivery_time}
-  if(raw):
-    print(json.dumps(data, indent=2))
   return result
 
 def ups_info(trackingNumbers, raw=False):
@@ -61,7 +62,7 @@ def usps_info_helper(trackingNumber, raw=False):
   status = delivery_class.findAll("strong")[0].get_text()
   time = ' '.join(delivery_class.findAll("div", {"class": "status_feed"})[0].findAll("p")[0].get_text().split())
 
-  delivery_time = datetime.strptime(time, '%B %d, %Y at %I:%M %p')
+  delivery_time = dateparser.parse(time)
 
   if status not in ['Delivered','Delivered to Agent']:
     delivery_time = DEFAULT_TIME
@@ -92,24 +93,25 @@ def fedex_info(trackingNumbers, raw=False):
       'version': 99
   }).json()
 
+  if(raw):
+    print(json.dumps(data, indent=2))
 
   result = {}
   for i in range(len(trackingNumbers)):
     number = trackingNumbers[i]
     info   = data['TrackPackagesResponse']['packageList'][i]
+    status = info['keyStatus']
     delivery_time = info["displayEstDeliveryDateTime"]
     if len(delivery_time)<1: 
       delivery_time = info["displayActDeliveryDateTime"]
 
     if delivery_time != 'Pending':
-      delivery_time = datetime.strptime(delivery_time, '%m/%d/%Y %I:%M %p')
+      delivery_time = dateparser.parse(delivery_time)
     else:
       delivery_time = DEFAULT_TIME
 
-    result[number] = {'status': info['keyStatus'],
+    result[number] = {'status': status,
                       'delivery_time': delivery_time}
-  if(raw):
-    print(json.dumps(data, indent=2))
   return result
 
 # input is a list of tracking numbers
