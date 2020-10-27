@@ -16,7 +16,7 @@ The code is just for my own use, hence it will not support more features unless 
 
 This code requires a lot of libraries. Need to un the following first.
 
-`pip install yaml requests xmltodict dict2xml tabulate bs4 tracking_url dateparser`
+`pip install pyyaml requests xmltodict dict2xml tabulate bs4 tracking_url dateparser`
 
 You need a `config.yml` file. You also need to [get an access key for UPS API](https://www.ups.com/upsdeveloperkit?loc=en_US).
 See `example_config.yml` to see what you need.
