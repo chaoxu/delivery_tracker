@@ -1,0 +1,4 @@
+UPS_ACCESS_KEY: 'your ups access key'
+UPS_USER_ID: 'your ups user id'
+UPS_PASSWORD: 'your password'
+TRACKING_FILE: 'tracking.csv'

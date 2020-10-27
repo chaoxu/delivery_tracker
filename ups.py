@@ -3,9 +3,21 @@
 import json
 import requests
 import xmltodict
-
+import pprint
 from datetime import datetime
 from dict2xml import dict2xml
+
+status_map = {
+  'I': 'In Transit',
+  'D': 'Delivered',
+  'X': 'Exception',
+  'P': 'Pickup',
+  'M': 'Manifest'
+}
+DEFAULT_DATE = datetime(1970,1,1,0,0,0).date()
+pprint = pprint.PrettyPrinter(indent=2)
+def ups_status(status_code):
+  return status_map.get(status_code, 'UNKNOWN')
 
 def get_tracking_from_reference(ups_conn, reference_number):
   tracking_request = {
@@ -109,16 +121,12 @@ class TrackingInfo(object):
       },
     }
 
-    self.result = ups_conn._transmit_request('track', tracking_request)
+    self.result = ups_conn._transmit_request(tracking_request)
+    #pprint.pprint(self.result.dict_response)
 
   @property
   def last_status(self):
     # Possible Status.StatusType.Code values:
-    #   I: In Transit
-    #   D: Delivered
-    #   X: Exception
-    #   P: Pickup
-    #   M: Manifest
     return self.last_activity['Status']['StatusType']['Code']
 
   @property
@@ -127,14 +135,36 @@ class TrackingInfo(object):
 
   @property
   def pick_up_date(self):
-    return datetime.strptime(self.package['PickupDate'], '%Y%m%d%').date()
+    return datetime.strptime(self.package['PickupDate'], '%Y%m%d').date()
+
+  @property
+  def eta(self):
+    if self.delivery_date:
+      return self.delivery_date
+    if self.scheduled_delivery_date:
+      return self.scheduled_delivery_date
+    return DEFAULT_DATE
+    #pprint.pprint(self.result.dict_response)
+    #exit(0)
 
   @property
   def scheduled_delivery_date(self):
-    return datetime.strptime(self.package['ScheduledDeliveryDate'], '%Y%m%d%').date()
+    if 'ScheduledDeliveryDate' in self.package:
+      return datetime.strptime(self.package['ScheduledDeliveryDate'], '%Y%m%d').date()
+    else:
+      return None
 
   @property
-  def package(self)
+  def delivery_date(self):
+    if 'DeliveryDate' in self.package:
+      return datetime.strptime(self.package['DeliveryDate'], '%Y%m%d').date()
+    else:
+      return None
+
+
+
+  @property
+  def package(self):
     return self.result.dict_response['TrackResponse']['Shipment']['Package']
 
   @property
