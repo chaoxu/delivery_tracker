@@ -141,6 +141,8 @@ class TrackingInfo(object):
   def eta(self):
     if self.delivery_date:
       return self.delivery_date
+    if self.rescheduled_delivery_date:
+      return self.rescheduled_delivery_date
     if self.scheduled_delivery_date:
       return self.scheduled_delivery_date
     return DEFAULT_DATE
@@ -155,11 +157,23 @@ class TrackingInfo(object):
       return None
 
   @property
+  def usps_tracking(self):
+    if 'PackageServiceOptions' in self.package:
+      if 'USPSPICNumber' in self.package['PackageServiceOptions']:
+        return self.package['PackageServiceOptions']['USPSPICNumber']
+    return None
+
+  @property
+  def rescheduled_delivery_date(self):
+    if 'RescheduledDeliveryDate' in self.package:
+      return datetime.strptime(self.package['RescheduledDeliveryDate'], '%Y%m%d').date()
+    return None
+
+  @property
   def delivery_date(self):
     if 'DeliveryDate' in self.package:
       return datetime.strptime(self.package['DeliveryDate'], '%Y%m%d').date()
-    else:
-      return None
+    return None
 
 
 
