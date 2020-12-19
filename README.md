@@ -18,7 +18,8 @@ This code requires a lot of libraries. Need to un the following first.
 
 `pip install pyyaml requests xmltodict dict2xml tabulate bs4 tracking_url dateparser`
 
-You need a `config.yml` file. You also need to [get an access key for UPS API](https://www.ups.com/upsdeveloperkit?loc=en_US).
+You need a `config.yml` file. You also need to [get an access key for UPS API](https://www.ups.com/upsdeveloperkit?loc=en_US), and [USPS API](https://www.usps.com/business/web-tools-apis/).
+
 See `example_config.yml` to see what you need.
 
 # Usage
