@@ -9,28 +9,15 @@ import dateparser
 import ups
 import pprint
 import time
+from utils import take_some_time
 
-DEFAULT_TIME = datetime(1970,1,1,0,0,0)
+DEFAULT_TIME = datetime(1970,1,1,0,0,0).date()
 USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X x.y; rv:42.0) Gecko/20100101 Firefox/42.0'
 
-
-def take_some_time(f):
-  def wrapper(*args):
-    delay = args[0].delay
-    start = datetime.now()
-    result = f(*args)
-    end = datetime.now()
-    diff = end-start
-    need_more = delay - diff.total_seconds()
-    if need_more > 0:
-      time.sleep(need_more)
-    return result
-
-  return wrapper
-
 class ParcelInfo:
-  def __init__(self, ups_conn, delay=2.0):
+  def __init__(self, ups_conn, usps_conn, delay=2.0):
     self.ups_conn = ups_conn
+    self.usps_conn = usps_conn
     self.delay = delay
 
   @staticmethod
@@ -46,36 +33,17 @@ class ParcelInfo:
   def ups_info(self, trackingNumbers):
     result = []
     for x in trackingNumbers:
-      result.append(self.ups_info_helper(x))
+      try:
+        info = self.ups_info_helper(x)
+      except:
+        info = (x, 'FAILED', DEFAULT_TIME)
+      result.append(info)
     return result
-
-  @take_some_time
-  def usps_info_helper(self, trackingNumber):
-    s = requests.Session()
-    headers = {'User-Agent': USER_AGENT}
-    r = s.get('http://tools.usps.com/go/TrackConfirmAction.action?tLabels='+trackingNumber, headers=headers)
-
-    soup = BeautifulSoup(r.content , 'html.parser')
-
-    delivery_class = soup.findAll("div", {"class": "delivery_status"})[0]
-
-    status = delivery_class.findAll("strong")[0].get_text()
-    time = ' '.join(delivery_class.findAll("div", {"class": "status_feed"})[0].findAll("p")[0].get_text().split())
-
-    delivery_time = dateparser.parse(time)
-
-    if status not in ['Delivered','Delivered to Agent']:
-      delivery_time = DEFAULT_TIME
-
-    return (trackingNumber, status, delivery_time)
 
   def usps_info(self, trackingNumbers):
-    result = []
-    for x in trackingNumbers:
-      result.append(self.usps_info_helper(x))
-    return result
+    return self.usps_conn.tracking(trackingNumbers)
 
-  # input is a list of tracking numbers, at most 30
+   # input is a list of tracking numbers, at most 30
   @take_some_time
   def fedex_info_helper(self, trackingNumbers):
     # used stuff here https://stackoverflow.com/questions/18817185/parsing-html-does-not-output-desired-datatracking-info-for-fedex
@@ -122,7 +90,7 @@ class ParcelInfo:
     return result
 
   def get_tracking(self, x):
-    return (self.get_trackings([x]))[x]
+    return (self.get_trackings([x]))[0]
 
   # input is a list of tracking numbers
   def get_trackings(self, xs):

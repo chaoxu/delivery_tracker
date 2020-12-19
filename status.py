@@ -15,4 +15,4 @@ ups_conn = ups.UPSTrackerConnection(CONFIG['UPS_ACCESS_KEY'],
 parcel_object = parcel_info.ParcelInfo(ups_conn)
 
 
-print(parcel_object.get_tracking([sys.argv[1]]))
+print(parcel_object.get_tracking(sys.argv[1]))

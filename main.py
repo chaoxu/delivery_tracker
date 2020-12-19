@@ -1,6 +1,7 @@
 import format
 import parcel_info
 import ups
+import usps
 import yaml
 import sys
 
@@ -20,5 +21,9 @@ with open(tracking_file, "r+") as f:
 ups_conn = ups.UPSTrackerConnection(CONFIG['UPS_ACCESS_KEY'],
                                     CONFIG['UPS_USER_ID'],
                                     CONFIG['UPS_PASSWORD'])
-parcel_object = parcel_info.ParcelInfo(ups_conn)
+usps_conn = usps.USPSTrackerConnection(CONFIG['USPS_USER_ID'],
+                                       CONFIG['USPS_SOURCE_NAME'])
+
+parcel_object = parcel_info.ParcelInfo(ups_conn, usps_conn)
+parcel_object.delay = 2
 format.print_tracking(parcel_object, trackingNumbers)
