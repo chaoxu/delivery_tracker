@@ -111,6 +111,7 @@ class ParcelInfo:
       print(carrier, trackingNumbers)
       results.extend((f[carrier])(list(set(trackingNumbers))))
 
+    print(results)
     dd = {}
     for tracking, status, eta in results:
       dd[tracking] = {'status': status,

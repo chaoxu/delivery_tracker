@@ -36,7 +36,7 @@ def get_tracking_from_reference(ups_conn, reference_number):
     },
   }
   l = []
-  for x in ups_conn._transmit_request('track', tracking_request).dict_response['TrackResponse']['Shipment']:
+  for x in ups_conn._transmit_request(tracking_request).dict_response['TrackResponse']['Shipment']:
     l.append(x['Package']['TrackingNumber'])
   return l
 
